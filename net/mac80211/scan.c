@@ -140,8 +140,10 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
 	bss->wmm_used = elems->wmm_param || elems->wmm_info;
 	bss->uapsd_supported = is_uapsd_supported(elems);
 
-	if (!beacon)
+	if (!beacon) {
 		bss->last_probe_resp = jiffies;
+        printk(KERN_INFO "I just notice a probe response at %li", jiffies);
+    }
 
 	return bss;
 }
@@ -653,17 +655,20 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
 	int i;
 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
 
-	for (i = 0; i < local->scan_req->n_ssids; i++)
+	for (i = 0; i < local->scan_req->n_ssids; i++) {
+        printk(KERN_INFO "Going to send a probe request at %li", jiffies);
 		ieee80211_send_probe_req(
 			sdata, NULL,
 			local->scan_req->ssids[i].ssid,
 			local->scan_req->ssids[i].ssid_len,
 			local->scan_req->ie, local->scan_req->ie_len);
+    }
 
 	/*
 	 * After sending probe requests, wait for probe responses
 	 * on the channel.
 	 */
+
 	*next_delay = IEEE80211_CHANNEL_TIME;
 	local->next_scan_state = SCAN_DECISION;
 }

@@ -181,6 +181,12 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 		presp = true;
 		elements = mgmt->u.probe_resp.variable;
 		baselen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
+		printk(KERN_INFO "Se recibio un probe_response en: %lu ", jiffies);
+
+        /* Channel, HZ, jiffies, usecs, msecs */
+		printk(KERN_INFO "presponse:%d:%i:%lu:%u:%u",
+                sdata->local->scan_channel_idx, HZ, jiffies,
+                jiffies_to_usecs(jiffies), jiffies_to_msecs(jiffies));
 	} else {
 		beacon = ieee80211_is_beacon(fc);
 		baselen = offsetof(struct ieee80211_mgmt, u.beacon.variable);
@@ -381,6 +387,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
 static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
 				  struct cfg80211_scan_request *req)
 {
+	printk(KERN_INFO "Comenzamos el scanning en: %lu", jiffies);
 	struct ieee80211_local *local = sdata->local;
 	int rc;
 
@@ -652,6 +659,15 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
 {
 	int i;
 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
+
+    printk(KERN_INFO "Channel: %d", local->scan_channel_idx);
+	printk(KERN_INFO "Se envio un probe_reqs en: %lu", jiffies);
+
+    /* Channel, HZ, jiffies, usecs, msecs */
+	printk(KERN_INFO "prequest:%d:%i:%lu:%u:%u",
+            local->scan_channel_idx, HZ, jiffies, jiffies_to_usecs(jiffies),
+            jiffies_to_msecs(jiffies));
+
 
 	for (i = 0; i < local->scan_req->n_ssids; i++)
 		ieee80211_send_probe_req(

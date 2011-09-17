@@ -31,6 +31,7 @@ struct ieee80211_bss *
 ieee80211_rx_bss_get(struct ieee80211_local *local, u8 *bssid, int freq,
 		     u8 *ssid, u8 ssid_len)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct cfg80211_bss *cbss;
 
 	cbss = cfg80211_get_bss(local->hw.wiphy,
@@ -43,6 +44,7 @@ ieee80211_rx_bss_get(struct ieee80211_local *local, u8 *bssid, int freq,
 
 static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_bss *bss = (void *)cbss->priv;
 
 	kfree(bss_mesh_id(bss));
@@ -52,6 +54,7 @@ static void ieee80211_rx_bss_free(struct cfg80211_bss *cbss)
 void ieee80211_rx_bss_put(struct ieee80211_local *local,
 			  struct ieee80211_bss *bss)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	if (!bss)
 		return;
 	cfg80211_put_bss(container_of((void *)bss, struct cfg80211_bss, priv));
@@ -59,6 +62,7 @@ void ieee80211_rx_bss_put(struct ieee80211_local *local,
 
 static bool is_uapsd_supported(struct ieee802_11_elems *elems)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	u8 qos_info;
 
 	if (elems->wmm_info && elems->wmm_info_len == 7
@@ -83,6 +87,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
 			  struct ieee80211_channel *channel,
 			  bool beacon)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct cfg80211_bss *cbss;
 	struct ieee80211_bss *bss;
 	int clen, srlen;
@@ -140,8 +145,10 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
 	bss->wmm_used = elems->wmm_param || elems->wmm_info;
 	bss->uapsd_supported = is_uapsd_supported(elems);
 
-	if (!beacon)
+	if (!beacon) {
+		printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 		bss->last_probe_resp = jiffies;
+    }
 
 	return bss;
 }
@@ -149,6 +156,7 @@ ieee80211_bss_info_update(struct ieee80211_local *local,
 ieee80211_rx_result
 ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_rx_status *rx_status = IEEE80211_SKB_RXCB(skb);
 	struct ieee80211_mgmt *mgmt;
 	struct ieee80211_bss *bss;
@@ -181,12 +189,17 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 		presp = true;
 		elements = mgmt->u.probe_resp.variable;
 		baselen = offsetof(struct ieee80211_mgmt, u.probe_resp.variable);
-		printk(KERN_INFO "Se recibio un probe_response en: %lu ", jiffies);
+		printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 
-        /* Channel, HZ, jiffies, usecs, msecs */
-		printk(KERN_INFO "presponse:%d:%i:%lu:%u:%u",
-                sdata->local->scan_channel_idx, HZ, jiffies,
-                jiffies_to_usecs(jiffies), jiffies_to_msecs(jiffies));
+        /* Channel, center_freq, HZ, jiffies, usecs, msecs */
+        printk(KERN_INFO "presponse:%d:%d:%i:%lu:%u:%u",
+                sdata->local->scan_channel_idx,
+                sdata->local->hw.conf.channel->center_freq,
+                HZ,
+                jiffies,
+                jiffies_to_usecs(jiffies),
+                jiffies_to_msecs(jiffies));
+
 	} else {
 		beacon = ieee80211_is_beacon(fc);
 		baselen = offsetof(struct ieee80211_mgmt, u.beacon.variable);
@@ -233,6 +246,7 @@ ieee80211_scan_rx(struct ieee80211_sub_if_data *sdata, struct sk_buff *skb)
 /* return false if no more work */
 static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct cfg80211_scan_request *req = local->scan_req;
 	enum ieee80211_band band;
 	int i, ielen, n_chans;
@@ -267,6 +281,7 @@ static bool ieee80211_prep_hw_scan(struct ieee80211_local *local)
 static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
 				       bool was_hw_scan)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local = hw_to_local(hw);
 	bool on_oper_chan;
 	bool enable_beacons = false;
@@ -333,6 +348,7 @@ static void __ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted,
 
 void ieee80211_scan_completed(struct ieee80211_hw *hw, bool aborted)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local = hw_to_local(hw);
 
 	trace_api_scan_completed(local, aborted);
@@ -346,6 +362,7 @@ EXPORT_SYMBOL(ieee80211_scan_completed);
 
 static int ieee80211_start_sw_scan(struct ieee80211_local *local)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	/*
 	 * Hardware/driver doesn't support hw_scan, so use software
 	 * scanning instead. First send a nullfunc frame with power save
@@ -387,6 +404,7 @@ static int ieee80211_start_sw_scan(struct ieee80211_local *local)
 static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
 				  struct cfg80211_scan_request *req)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	printk(KERN_INFO "Comenzamos el scanning en: %lu", jiffies);
 	struct ieee80211_local *local = sdata->local;
 	int rc;
@@ -465,6 +483,7 @@ static int __ieee80211_start_scan(struct ieee80211_sub_if_data *sdata,
 static unsigned long
 ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	/*
 	 * TODO: channel switching also consumes quite some time,
 	 * add that delay as well to get a better estimation
@@ -477,6 +496,7 @@ ieee80211_scan_get_channel_time(struct ieee80211_channel *chan)
 static void ieee80211_scan_state_decision(struct ieee80211_local *local,
 					  unsigned long *next_delay)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	bool associated = false;
 	bool tx_empty = true;
 	bool bad_latency;
@@ -567,6 +587,7 @@ static void ieee80211_scan_state_decision(struct ieee80211_local *local,
 static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *local,
 						    unsigned long *next_delay)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	/* PS will already be in off-channel mode,
 	 * we do that once at the beginning of scanning.
 	 */
@@ -591,6 +612,7 @@ static void ieee80211_scan_state_leave_oper_channel(struct ieee80211_local *loca
 static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *local,
 						    unsigned long *next_delay)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	/* switch back to the operating channel */
 	local->scan_channel = NULL;
 	if (!ieee80211_cfg_on_oper_channel(local))
@@ -610,6 +632,7 @@ static void ieee80211_scan_state_enter_oper_channel(struct ieee80211_local *loca
 static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
 					     unsigned long *next_delay)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	int skip;
 	struct ieee80211_channel *chan;
 
@@ -652,29 +675,37 @@ static void ieee80211_scan_state_set_channel(struct ieee80211_local *local,
 	/* active scan, send probes */
 	*next_delay = IEEE80211_PROBE_DELAY;
 	local->next_scan_state = SCAN_SEND_PROBE;
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 }
 
 static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
 					    unsigned long *next_delay)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	int i;
 	struct ieee80211_sub_if_data *sdata = local->scan_sdata;
 
-    printk(KERN_INFO "Channel: %d", local->scan_channel_idx);
-	printk(KERN_INFO "Se envio un probe_reqs en: %lu", jiffies);
-
-    /* Channel, HZ, jiffies, usecs, msecs */
-	printk(KERN_INFO "prequest:%d:%i:%lu:%u:%u",
-            local->scan_channel_idx, HZ, jiffies, jiffies_to_usecs(jiffies),
+    /* Channel, center_freq, HZ, jiffies, usecs, msecs */
+	printk(KERN_INFO "Antes prequest:%d:%d:%i:%lu:%u:%u",
+            sdata->local->scan_channel_idx,
+            sdata->local->hw.conf.channel->center_freq,
+            HZ,
+            jiffies,
+            jiffies_to_usecs(jiffies),
             jiffies_to_msecs(jiffies));
 
+	for (i = 0; i < local->scan_req->n_ssids; i++) {
+        printk(KERN_INFO "i = %i:ssid = %s:ssid_len = %lc",
+            i,
+            local->scan_req->ssids[i].ssid,
+            local->scan_req->ssids[i].ssid_len);
 
-	for (i = 0; i < local->scan_req->n_ssids; i++)
-		ieee80211_send_probe_req(
+        ieee80211_send_probe_req(
 			sdata, NULL,
 			local->scan_req->ssids[i].ssid,
 			local->scan_req->ssids[i].ssid_len,
 			local->scan_req->ie, local->scan_req->ie_len);
+    }
 
 	/*
 	 * After sending probe requests, wait for probe responses
@@ -682,10 +713,12 @@ static void ieee80211_scan_state_send_probe(struct ieee80211_local *local,
 	 */
 	*next_delay = IEEE80211_CHANNEL_TIME;
 	local->next_scan_state = SCAN_DECISION;
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 }
 
 void ieee80211_scan_work(struct work_struct *work)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local =
 		container_of(work, struct ieee80211_local, scan_work.work);
 	struct ieee80211_sub_if_data *sdata;
@@ -741,6 +774,7 @@ void ieee80211_scan_work(struct work_struct *work)
 
 		switch (local->next_scan_state) {
 		case SCAN_DECISION:
+            printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 			/* if no more bands/channels left, complete scan */
 			if (local->scan_channel_idx >= local->scan_req->n_channels) {
 				aborted = false;
@@ -749,15 +783,20 @@ void ieee80211_scan_work(struct work_struct *work)
 			ieee80211_scan_state_decision(local, &next_delay);
 			break;
 		case SCAN_SET_CHANNEL:
+            printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 			ieee80211_scan_state_set_channel(local, &next_delay);
 			break;
 		case SCAN_SEND_PROBE:
+            printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 			ieee80211_scan_state_send_probe(local, &next_delay);
+            printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 			break;
 		case SCAN_LEAVE_OPER_CHANNEL:
+            printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 			ieee80211_scan_state_leave_oper_channel(local, &next_delay);
 			break;
 		case SCAN_ENTER_OPER_CHANNEL:
+            printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 			ieee80211_scan_state_enter_oper_channel(local, &next_delay);
 			break;
 		}
@@ -776,6 +815,7 @@ out:
 int ieee80211_request_scan(struct ieee80211_sub_if_data *sdata,
 			   struct cfg80211_scan_request *req)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	int res;
 
 	mutex_lock(&sdata->local->mtx);
@@ -789,6 +829,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
 				    const u8 *ssid, u8 ssid_len,
 				    struct ieee80211_channel *chan)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local = sdata->local;
 	int ret = -EBUSY;
 	enum ieee80211_band band;
@@ -837,6 +878,7 @@ int ieee80211_request_internal_scan(struct ieee80211_sub_if_data *sdata,
  */
 void ieee80211_scan_cancel(struct ieee80211_local *local)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	bool abortscan;
 
 	/*
@@ -875,6 +917,7 @@ void ieee80211_scan_cancel(struct ieee80211_local *local)
 int ieee80211_request_sched_scan_start(struct ieee80211_sub_if_data *sdata,
 				       struct cfg80211_sched_scan_request *req)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local = sdata->local;
 	int ret, i;
 
@@ -925,6 +968,7 @@ out:
 
 int ieee80211_request_sched_scan_stop(struct ieee80211_sub_if_data *sdata)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local = sdata->local;
 	int ret = 0, i;
 
@@ -950,6 +994,7 @@ out:
 
 void ieee80211_sched_scan_results(struct ieee80211_hw *hw)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local = hw_to_local(hw);
 
 	trace_api_sched_scan_results(local);
@@ -960,6 +1005,7 @@ EXPORT_SYMBOL(ieee80211_sched_scan_results);
 
 void ieee80211_sched_scan_stopped_work(struct work_struct *work)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local =
 		container_of(work, struct ieee80211_local,
 			     sched_scan_stopped_work);
@@ -984,6 +1030,7 @@ void ieee80211_sched_scan_stopped_work(struct work_struct *work)
 
 void ieee80211_sched_scan_stopped(struct ieee80211_hw *hw)
 {
+    printk(KERN_INFO "%s:%s:%i %lu ", __FILE__, __func__, __LINE__, jiffies);
 	struct ieee80211_local *local = hw_to_local(hw);
 
 	trace_api_sched_scan_stopped(local);

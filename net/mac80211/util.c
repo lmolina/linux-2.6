@@ -1067,8 +1067,19 @@ void ieee80211_send_probe_req(struct ieee80211_sub_if_data *sdata, u8 *dst,
 	struct sk_buff *skb;
 
 	skb = ieee80211_build_probe_req(sdata, dst, ssid, ssid_len, ie, ie_len);
-	if (skb)
+	if (skb) {
 		ieee80211_tx_skb(sdata, skb);
+
+        /* Channel, center_freq, HZ, jiffies, usecs, msecs */
+        printk(KERN_INFO "prequest:%d:%d:%i:%lu:%u:%u",
+            sdata->local->scan_channel_idx,
+            sdata->local->hw.conf.channel->center_freq,
+            HZ,
+            jiffies,
+            jiffies_to_usecs(jiffies),
+            jiffies_to_msecs(jiffies));
+    }
+
 }
 
 u32 ieee80211_sta_get_rates(struct ieee80211_local *local,
